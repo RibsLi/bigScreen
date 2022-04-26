@@ -7,6 +7,5 @@ import "assets/css/index.styl"
 
 const app = createApp(App)
 app.config.globalProperties.$echarts = echarts;
-// app.use(echarts)
 app.use(router);
 app.mount('#app')
