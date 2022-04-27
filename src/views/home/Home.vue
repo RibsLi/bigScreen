@@ -14,7 +14,9 @@ import { chinaMap } from "common/chinaMap.js";
 import { geoCoordMap } from "common/geoCoordMap.js";
 import { XXData, JJData, XJData } from "common/activeData.js"
 let { proxy } = getCurrentInstance();
-let planePath = $ref('path://M.6,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705');
+// 航线图标
+// let planePath = $ref('path://M.6,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705');
+let planePath = $ref('path://M1705.06,1318.313v-89.254l-319.9-221.799l0.073-208.063c0.521-84.662-26.629-121.796-63.961-121.491c-37.332-0.305-64.482,36.829-63.961,121.491l0.073,208.063l-319.9,221.799v89.254l330.343-157.288l12.238,241.308l-134.449,92.931l0.531,42.034l175.125-42.917l175.125,42.917l0.531-42.034l-134.449-92.931l12.238-241.308L1705.06,1318.313z');
 let color = $ref(['#3ed4ff', '#ffa022', '#a6c84c'])
 onMounted(() => {
   let myChart = proxy.$echarts.init(document.querySelector(".map .chart"));
@@ -47,24 +49,22 @@ onMounted(() => {
 
   aData.forEach((item, i) => {
     series.push(
-      {
+      { // type: 'lines'用于带有起点和终点信息的线数据的绘制，主要用于地图上的航线，路线的可视化
         name: item[0] + ' Top10',
         type: 'lines',
         zlevel: 1,
         effect: {
           show: true,
-          period: 6,
-          trailLength: 0.7,
+          period: 6, // 特效动画的时间，单位为 s。
+          trailLength: 0.7, // 特效尾迹的长度。取从 0 到 1 的值，数值越大尾迹越长
           color: '#fff',
-          symbolSize: 3
-        },
+          symbolSize: 3, // 线两端的标记大小，可以是一个数组分别指定两端(number Array)
+        }, // 线特效的配置
         lineStyle: {
-          normal: {
-            color: color[i],
-            width: 0,
-            curveness: 0.2
-          }
-        },
+          color: color[i],
+          width: 0,
+          curveness: 0.2, // 边的曲度，支持从 0 到 1 的值，值越大曲度越大
+        }, // 航线的相关配置
         data: convertData(item[1])
       },
       {
@@ -79,37 +79,36 @@ onMounted(() => {
           symbolSize: 15
         },
         lineStyle: {
-          normal: {
-            color: color[i],
-            width: 1,
-            opacity: 0.4,
-            curveness: 0.2
-          }
+          color: color[i],
+          width: 1,
+          opacity: 0.4,
+          curveness: 0.2
         },
         data: convertData(item[1])
       },
-      {
+      { // 配置带有涟漪特效动画的散点（气泡）图
         name: item[0] + ' Top10',
-        type: 'effectScatter',
-        coordinateSystem: 'geo',
-        zlevel: 2,
+        type: "effectScatter",
+        coordinateSystem: "geo", // 使用的坐标系'cartesian2d'使用二维的直角坐,'polar'使用极坐标系标系,'geo'使用地理坐标系
         rippleEffect: {
-          brushType: 'stroke'
-        },
-        label: {
-          normal: {
-            show: true,
-            position: 'right',
-            formatter: '{b}'
-          }
-        },
+          // color: "#f00", // 涟漪的颜色，默认为散点的颜色。
+          number: 3, // 波纹的数量
+          period: 4, // 动画的周期，秒数
+          scale: 2.5, // 动画中波纹的最大缩放比例
+          brushType: "fill", // 波纹的绘制方式可选 'stroke' 和 'fill'
+        }, // 涟漪特效相关配置
+        symbol: "circle", // 标记的图形(string Function) 可选值'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none', 也可以通过 'image://url' 设置为图片，也可以通过 'path://'设置为svg
         symbolSize: function (val) {
           return val[2] / 8;
+        }, // 标记的大小(number Array Function)
+        label: {
+          show: true,
+          position: 'right',
+          formatter: '{b}',
+          color: color[i]
         },
         itemStyle: {
-          normal: {
-            color: color[i]
-          }
+          color: color[i]
         },
         data: item[1].map(function (dataItem) {
           return {
@@ -117,21 +116,22 @@ onMounted(() => {
             value: geoCoordMap[dataItem[1].name].concat([dataItem[1].value])
           };
         })
-    })
+      }
+    )
   })
 
   let option = {
     backgroundColor: "rgba(0, 0, 0, .5)", // 背景色，默认无背景
     color: [], // 调色盘颜色列表
     title: {}, // 标题组件，包含主标题和副标题
-    legend: {}, // 图例组件
+    // legend: {}, // 图例组件
     tooltip: {}, // 提示框组件
     geo: {
       show: true, // 是否显示地理坐标系组件
       map: "chinaMap", // 注册的地图名称
       roam: true, // 是否开启鼠标缩放和平移漫游，可选值'scale' 或者 'move'
       selectedMode: "single", // 选中模式，表示是否支持多个选中，默认关闭，支持布尔值和字符串，字符串取值可选'single'表示单选，或者'multiple'表示多选。
-      // zoom: 1.2, // 缩放地图比例
+      zoom: 1.2, // 缩放地图比例
       label: {}, // 图形上的文本标签
       itemStyle: {
         areaColor: "rgba(20, 41, 87,0.6)", // 地图区域的颜色
@@ -149,20 +149,6 @@ onMounted(() => {
       blur: {}, // 淡出状态下的多边形和标签样式
     },
     series: series,
-    // series: {
-    //   type: "effectScatter",
-    //   coordinateSystem: "geo", // 使用的坐标系'cartesian2d'使用二维的直角坐,'polar'使用极坐标系标系,'geo'使用地理坐标系
-    //   rippleEffect: {
-    //     color: "#f00", // 涟漪的颜色，默认为散点的颜色。
-    //     number: 3, // 波纹的数量
-    //     period: 4, // 动画的周期，秒数
-    //     scale: 2.5, // 动画中波纹的最大缩放比例
-    //     brushType: "fill", // 波纹的绘制方式可选 'stroke' 和 'fill'
-    //   }, // 涟漪特效相关配置
-    //   symbol: "circle", // 标记的图形(string Function) 可选值'circle', 'rect', 'roundRect', 'triangle', 'diamond', 'pin', 'arrow', 'none', 也可以通过 'image://url' 设置为图片，也可以通过 'path://'设置为svg
-    //   symbolSize: 10, // 标记的大小(number Array Function)
-    //   label: {},
-    // }, // 配置带有涟漪特效动画的散点（气泡）图
   };
   option && myChart.setOption(option);
   window.addEventListener("resize", function () {
